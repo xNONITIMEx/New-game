@@ -92,7 +92,7 @@ def main():
     
     clock = pg.time.Clock()
     # Saving images to variables
-    player_image = pg.image.load('testing_animation.jpg').convert()
+    player_image = pg.image.load('player.png').convert()
     wall_image = pg.image.load('wall.png').convert()
     # Saving parameters of images
     player_width = player_image.get_width()
