@@ -9,14 +9,15 @@ VELOCITY = 10
 
 
 class Player:
-    def __init__(self, player_image, position):
-        self.player_image = player_image
+    image = pg.image.load('player.png')
+
+    def __init__(self, position):
         # Indicator of flipping image
         self.flip = False
         self.x, self.y = position
-        self.width, self.height = player_image.get_width(), player_image.get_height()
+        self.width, self.height = self.image.get_width(), self.image.get_height()
         # Creating rectangle around the player
-        self.rect = self.player_image.get_rect()
+        self.rect = self.image.get_rect()
         self.rect.center = position
 
         # Indicator of jumping process
@@ -26,7 +27,7 @@ class Player:
 
     # Drawing method
     def draw(self, screen):
-        screen.blit(pg.transform.flip(self.player_image, self.flip, False), self.rect)
+        screen.blit(pg.transform.flip(self.image, self.flip, False), self.rect)
         # Drawing rectangle around player
         pg.draw.rect(screen, (0, 255, 0), self.rect, 2)
 
@@ -69,13 +70,12 @@ class Player:
             dx = -5
             self.flip = True
         # Prohibiting player to move out of screen
-        if self.rect.left + dx <= 0:
-            dx = -self.rect.left
-        if self.rect.right + dx >= WIDTH:
-            dx = WIDTH - self.rect.right
         if self.rect.top + dy <= 0:
             dy = 10
             self.is_jump = False
         # Adding amount of pixels we will move to
-        self.rect.x += dx
         self.rect.y += dy
+
+    def set_position(self, position):
+        self.rect.x, self.rect.y = position[0] - self.rect.width // 2, position[1] - self.rect.height // 2
+
