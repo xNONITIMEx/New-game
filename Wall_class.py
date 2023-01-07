@@ -9,6 +9,8 @@ class Wall(pg.sprite.Sprite):
         self.collected = False
         self.position = position
         self.rect = self.image.get_rect()
+        # self.rect = pg.Rect(position, (self.image.get_width() + 20, self.image.get_height()))
+        # self.rect.center = (position[0] - 20, position[1])
         self.rect.center = position
 
     def draw(self, screen):

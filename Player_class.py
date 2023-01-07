@@ -1,11 +1,15 @@
 import pygame as pg
-# from main import HEIGHT, WIDTH
+
 from pygame.locals import *
 
 HEIGHT = 600
 WIDTH = 400
+ACCELERATION = 0.5
+FRIC = -0.12
 
-VELOCITY = 11
+VELOCITY = 8
+
+vectors = pg.math.Vector2
 
 
 class Player(pg.sprite.Sprite):
@@ -15,17 +19,22 @@ class Player(pg.sprite.Sprite):
         pg.sprite.Sprite.__init__(self)
         # Indicator of flipping image
         self.flip = False
-        self.x, self.y = position
+        self.position = vectors(position)
         self.width, self.height = self.image.get_width(), self.image.get_height()
         # Creating rectangle around the player
         self.rect = self.image.get_rect()
         self.rect.center = position
         self.x_direction = 1
+        self.jumpCount = VELOCITY
+        self.swap_x_direction = False
+        self.velocity = vectors((0, 0))
+        self.acceleration = vectors((0, 0))
+        self.dx = 0
+        self.dy = 0
 
         # Indicator of jumping process
         self.is_jump = False
         # Distance of moving up and down, kind of velocity
-        self.jump_offset = VELOCITY
 
     # Drawing method
     def draw(self, screen):
@@ -34,91 +43,57 @@ class Player(pg.sprite.Sprite):
         pg.draw.rect(screen, (0, 255, 0), self.rect, 2)
 
     def move(self):
+        self.acceleration = vectors((0, 0.5))
         keys = pg.key.get_pressed()
-        # Delta x and delta y variables
-        dx = 0
-        dy = 0
+        if keys[K_d]:
+            self.acceleration.x = ACCELERATION
+            self.flip = False
+        if keys[K_a]:
+            self.acceleration.x = -ACCELERATION
+            self.flip = True
+        self.acceleration.x += self.velocity.x * FRIC
+        self.velocity += self.acceleration
+        self.position += vectors((0, 0))
+        self.position += self.velocity + 0.5 * self.acceleration
+        if self.position.x > WIDTH:
+            self.position.x = 0
+        if self.position.x < 0:
+            self.position.x = WIDTH
+        self.rect.midbottom = self.position
 
-        # Process of jumping
-        # Info was taken from
-        # https://www.techwithtim.net/tutorials/game-development-with-python/pygame-tutorial/jumping/
+    def jump(self, group):
+        hits = pg.sprite.spritecollideany(self, group)
+        if hits:
+            self.velocity.y = -12
+            # self.velocity.x = 12
 
-        # Check if player is not jumping
-        if self.is_jump is False:
-            # Switching jumping indicator to True
-            if keys[K_SPACE]:
-                self.is_jump = True
-                self.x_direction *= -1
-            print('false')
-        else:
-            # If velocity is lower than original velocity (VELOCITY)
-            if self.jump_offset >= -VELOCITY:
-                # If direction is positive, player goes up. If it's negative, player goes down
-                direction = 1
-                if self.jump_offset < 0:
-                    direction = -1
-                # Deducting amount of pixels, which is counting by multiplying quadratic velocity to
-                # coefficient which controls the amplitude of jump to
-                # direction
-                dy -= (self.jump_offset ** 2) * 0.4 * direction
-                dx += 9 * self.x_direction
-                # Reducing velocity
-                self.jump_offset -= 1
-            else:
-                self.jump_offset = VELOCITY
-                self.is_jump = False
-        # Moving by x-axis
-        # if keys[K_d] and self.x <= WIDTH - self.width:
-        #     dx = 3
-        #     self.flip = False
-        # if keys[K_a] and self.x >= 0:
-        #     dx = -3
-        #     self.flip = True
-        # Prohibiting player to move out of screen
-        if self.rect.top + dy <= 0:
-            dy = 10
-            self.is_jump = False
-        # Adding amount of pixels we will move to
-        self.rect.y += dy
-        self.rect.x += dx
+    def update(self, group):
+        hits = pg.sprite.spritecollideany(self, group)
+        if hits and self.velocity.y > 0:
+            self.position.y = hits.rect.top + 1
+            self.velocity.y = 0
 
     def relationships_with_walls(self, walls: pg.sprite.Group):
-        collision_tolerance = 10
+        collision_tolerance = 30
         keys = pg.key.get_pressed()
         wall = pg.sprite.spritecollideany(self, walls)
         if wall is not None:
             if self.rect.colliderect(wall.rect):
                 if abs(self.rect.left - wall.rect.right) < collision_tolerance:
-                    self.is_jump = False
-                    if keys[K_SPACE]:
-                        self.is_jump = True
-                        self.rect.x += 5
-                if abs(self.rect.right - wall.rect.left) < collision_tolerance:
-                    self.is_jump = False
                     wall.collected = True
                     if keys[K_SPACE]:
-                        self.is_jump = True
-                        self.rect.x -= 5
-                if abs(self.rect.bottom - wall.rect.top) < collision_tolerance:
-                    print('bottom to top')
-                    self.is_jump = False
+                        pass
+                if abs(self.rect.right - wall.rect.left) < collision_tolerance:
+                    wall.collected = True
                     if keys[K_SPACE]:
-                        print('space pressed')
-                        self.is_jump = True
-
-        #     right_player_side = self.rect.x + self.image.get_width() // 2
-        #     left_player_side = self.rect.x - self.image.get_width() // 2
-        #     right_wall_side = self.rect.x - self.image.get_width() // 2
-        #     left_wall_side = self.rect.x - self.image.get_width() // 2
-        #     if right_wall_side <= left_player_side:
-        #         self.is_jump = False
-        #         self.x_direction = -1
-        #     if left_wall_side >= right_player_side:
-        #         self.is_jump = False
-        #         self.x_direction = 1
+                        pass
+                if abs(self.rect.bottom - wall.rect.top) < collision_tolerance:
+                    pass
+                    if keys[K_SPACE]:
+                        pass
         if self.is_jump:
             # walls.update()
             pass
 
     def set_position(self, position):
-        self.rect.x, self.rect.y = position[0] - self.rect.width // 2, position[1] - self.rect.height // 2
+        self.position = position[0] - self.rect.width // 2, position[1]
