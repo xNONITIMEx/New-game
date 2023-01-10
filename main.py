@@ -45,6 +45,7 @@ def main():
             pg.draw.rect(screen, 'blue', wall.rect, 2)
         # Player moving
         player.update(platforms)
+        player.relationships_with_walls(start_pos)
         player.move()
 
         for event in pg.event.get():

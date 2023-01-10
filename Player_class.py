@@ -29,8 +29,7 @@ class Player(pg.sprite.Sprite):
         self.swap_x_direction = False
         self.velocity = vectors((0, 0))
         self.acceleration = vectors((0, 0))
-        self.dx = 0
-        self.dy = 0
+        self.touching_wall = False
 
         # Indicator of jumping process
         self.is_jump = False
@@ -43,7 +42,11 @@ class Player(pg.sprite.Sprite):
         pg.draw.rect(screen, (0, 255, 0), self.rect, 2)
 
     def move(self):
-        self.acceleration = vectors((0, 0.5))
+        if not self.touching_wall:
+            self.acceleration = vectors((0, 0.5))
+        else:
+            self.acceleration = vectors((0, 0))
+            self.velocity = vectors((0, 0))
         keys = pg.key.get_pressed()
         if keys[K_d]:
             self.acceleration.x = ACCELERATION
@@ -65,7 +68,7 @@ class Player(pg.sprite.Sprite):
         hits = pg.sprite.spritecollideany(self, group)
         if hits:
             self.velocity.y = -12
-            # self.velocity.x = 12
+            self.velocity.x = -12
 
     def update(self, group):
         hits = pg.sprite.spritecollideany(self, group)
@@ -80,20 +83,21 @@ class Player(pg.sprite.Sprite):
         if wall is not None:
             if self.rect.colliderect(wall.rect):
                 if abs(self.rect.left - wall.rect.right) < collision_tolerance:
+                    self.touching_wall = True
                     wall.collected = True
                     if keys[K_SPACE]:
                         pass
                 if abs(self.rect.right - wall.rect.left) < collision_tolerance:
+                    self.touching_wall = True
                     wall.collected = True
                     if keys[K_SPACE]:
                         pass
                 if abs(self.rect.bottom - wall.rect.top) < collision_tolerance:
-                    pass
+                    self.touching_wall = True
                     if keys[K_SPACE]:
                         pass
-        if self.is_jump:
-            # walls.update()
-            pass
+        else:
+            self.touching_wall = False
 
     def set_position(self, position):
         self.position = position[0] - self.rect.width // 2, position[1]
