@@ -13,7 +13,7 @@ vectors = pg.math.Vector2
 
 
 class Player(pg.sprite.Sprite):
-    image = pg.transform.scale(pg.image.load('player.png'), (40, 50))
+    image = pg.transform.scale(pg.image.load('assets/player.png'), (40, 50))
 
     def __init__(self, position):
         pg.sprite.Sprite.__init__(self)
@@ -30,6 +30,7 @@ class Player(pg.sprite.Sprite):
         self.velocity = vectors((0, 0))
         self.acceleration = vectors((0, 0))
         self.touching_wall = False
+        self.change_direction = [1, False]
 
         # Indicator of jumping process
         self.is_jump = False
@@ -42,11 +43,14 @@ class Player(pg.sprite.Sprite):
         pg.draw.rect(screen, (0, 255, 0), self.rect, 2)
 
     def move(self):
+        keys = pg.key.get_pressed()
         if not self.touching_wall:
             self.acceleration = vectors((0, 0.5))
         else:
             self.acceleration = vectors((0, 0))
             self.velocity = vectors((0, 0))
+            if not self.change_direction[1]:
+                self.change_direction[1] = True
         keys = pg.key.get_pressed()
         if keys[K_d]:
             self.acceleration.x = ACCELERATION
@@ -68,7 +72,7 @@ class Player(pg.sprite.Sprite):
         hits = pg.sprite.spritecollideany(self, group)
         if hits:
             self.velocity.y = -12
-            self.velocity.x = -12
+            self.velocity.x = -12 * self.change_direction[0]
 
     def update(self, group):
         hits = pg.sprite.spritecollideany(self, group)
@@ -86,12 +90,22 @@ class Player(pg.sprite.Sprite):
                     self.touching_wall = True
                     wall.collected = True
                     if keys[K_SPACE]:
-                        pass
+                        if self.change_direction[1]:
+                            self.change_direction[1] = False
+                            self.change_direction[0] = -1
+                            self.flip = False
+                        self.position.x += 10
+                        self.jump(walls)
                 if abs(self.rect.right - wall.rect.left) < collision_tolerance:
                     self.touching_wall = True
                     wall.collected = True
                     if keys[K_SPACE]:
-                        pass
+                        if self.change_direction[1]:
+                            self.change_direction[1] = False
+                            self.change_direction[0] = 1
+                            self.flip = True
+                        self.position.x -= 10
+                        self.jump(walls)
                 if abs(self.rect.bottom - wall.rect.top) < collision_tolerance:
                     self.touching_wall = True
                     if keys[K_SPACE]:
