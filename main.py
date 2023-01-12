@@ -54,7 +54,6 @@ def main():
             if event.type == pg.KEYDOWN:
                 if event.key == pg.K_SPACE:
                     player.jump(platforms)
-                    print('space pressed')
 
         pg.display.flip()
         clock.tick(FPS)

@@ -72,7 +72,7 @@ class Player(pg.sprite.Sprite):
         hits = pg.sprite.spritecollideany(self, group)
         if hits:
             self.velocity.y = -12
-            self.velocity.x = -12 * self.change_direction[0]
+            self.velocity.x = -10 * self.change_direction[0]
 
     def update(self, group):
         hits = pg.sprite.spritecollideany(self, group)

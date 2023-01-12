@@ -5,7 +5,7 @@ WIDTH = 400
 
 
 class Platform(pg.sprite.Sprite):
-    image = pg.transform.scale(pg.image.load('ground.png'), (WIDTH, 20))
+    image = pg.transform.scale(pg.image.load('assets/horizontal_wall.png'), (WIDTH, 20))
 
     def __init__(self):
         pg.sprite.Sprite.__init__(self)

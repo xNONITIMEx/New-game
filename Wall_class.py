@@ -2,7 +2,7 @@ import pygame as pg
 
 
 class Wall(pg.sprite.Sprite):
-    image = pg.transform.scale(pg.image.load('wall.png'), (20, 80))
+    image = pg.transform.scale(pg.image.load('assets/wall.png'), (20, 80))
 
     def __init__(self, position, *walls):
         pg.sprite.Sprite.__init__(self, *walls)
