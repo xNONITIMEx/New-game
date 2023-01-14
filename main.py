@@ -55,11 +55,6 @@ def main():
             if event.type == pg.KEYDOWN:
                 if event.key == pg.K_SPACE:
                     player.jump(platforms)
-            if event.type == pg.KEYUP:
-                if event.key == pg.K_SPACE:
-                    player.space_up = True
-            else:
-                player.space_up = False
         if player.on_ground:
             print('on ground')
         if player.on_wall:

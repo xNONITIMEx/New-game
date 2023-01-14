@@ -20,25 +20,25 @@ class Player(pg.sprite.Sprite):
         pg.sprite.Sprite.__init__(self)
         # Indicator of flipping image
         self.flip = False
+        # Использую векторы, потому что так удобнее работать с осями
         self.position = vectors(position)
         self.width, self.height = self.image.get_width(), self.image.get_height()
         # Creating rectangle around the player
         self.rect = self.image.get_rect()
         self.rect.center = position
-        self.x_direction = 1
         self.jumpCount = VELOCITY
-        self.swap_x_direction = False
+        # Переменная отвеает за
         self.velocity = vectors((0, 0))
         self.acceleration = vectors((0, 0))
+        # Индикаторы положения игрока
         self.on_wall = False
         self.in_the_air = False
         self.on_ground = False
+        # первая переменная - направление, в которое будет прыгать игррок,
+        # вторая - False, если игрок на стене,
+        # и направлнение уже измененео,
+        # True, если надо изменить
         self.change_direction = [1, False]
-        self.space_up = False
-
-        # Indicator of jumping process
-        self.is_jump = False
-        # Distance of moving up and down, kind of velocity
 
     # Drawing method
     def draw(self, screen):
@@ -47,11 +47,13 @@ class Player(pg.sprite.Sprite):
         pg.draw.rect(screen, (0, 255, 0), self.rect, 2)
 
     def move(self):
+        # Положение не должно меняться, если игрок на стене
         if not self.on_wall:
             self.acceleration = vectors((0, 0.5))
         else:
             self.acceleration = vectors((0, 0))
             self.velocity = vectors((0, 0))
+            # Смена индикатора смены направления
             if not self.change_direction[1]:
                 self.change_direction[1] = True
         keys = pg.key.get_pressed()
@@ -61,18 +63,18 @@ class Player(pg.sprite.Sprite):
         if keys[K_a]:
             self.acceleration.x = -ACCELERATION
             self.flip = True
+        # изменение ускорения по х
         self.acceleration.x += self.velocity.x * FRIC
+        # Изменение ускорения в обоих осях
         self.velocity += self.acceleration
         self.position += vectors((0, 0))
+        # изменение положения
         self.position += self.velocity + 0.5 * self.acceleration
-        if self.position.x > WIDTH:
-            self.position.x = 0
-        if self.position.x < 0:
-            self.position.x = WIDTH
+        # окончательно изменение позиции
         self.rect.midbottom = self.position
 
     def jump(self, group):
-
+        # проверка на касание с объестом, от которого можно оттолкнуться
         hits = pg.sprite.spritecollideany(self, group)
         if hits:
             self.velocity.y = -12
@@ -81,6 +83,7 @@ class Player(pg.sprite.Sprite):
             self.on_wall = False
             self.on_ground = False
 
+    # запрет на падение вниз
     def update(self, group):
         hits = pg.sprite.spritecollideany(self, group)
         if hits and self.velocity.y > 0:
@@ -88,7 +91,7 @@ class Player(pg.sprite.Sprite):
             self.velocity.y = 0
 
     def collisions(self, walls=pg.sprite.Group, platforms=pg.sprite.Group):
-        collision_tolerance = 30
+        collision_tolerance = 10
         keys = pg.key.get_pressed()
         platform = pg.sprite.spritecollideany(self, platforms)
         if type(platform) == Platform:
@@ -97,20 +100,24 @@ class Player(pg.sprite.Sprite):
         else:
             self.on_ground = False
         wall = pg.sprite.spritecollideany(self, walls)
+        # проверка на касание стены
         if wall is not None:
             if self.rect.colliderect(wall.rect):
+                # проверка на сторону, которой игрок касается
                 if abs(self.rect.left - wall.rect.right) < collision_tolerance:
                     self.on_wall = True
                     self.in_the_air = False
                     wall.collected = True
-                    # if keys[KEYUP] and not self.in_the_air:
-                    #     self.on_wall = False
-                    #     if self.change_direction[1]:
-                    #         self.change_direction[1] = False
-                    #         self.change_direction[0] = -1
-                    #         self.flip = False
-                    #     self.position.x += 10
-                    #     self.jump(walls)
+                    # прыжок от стены
+                    if keys[K_SPACE] and not self.in_the_air:
+                        self.on_wall = False
+                        if self.change_direction[1]:
+                            self.change_direction[1] = False
+                            self.change_direction[0] = -1
+                            self.flip = False
+                        self.position.x += 10
+                        self.jump(walls)
+                # здесь то же самое, только с другой стороны стены
                 if abs(self.rect.right - wall.rect.left) < collision_tolerance:
                     self.on_wall = True
                     self.in_the_air = False
@@ -123,10 +130,8 @@ class Player(pg.sprite.Sprite):
                             self.flip = True
                         self.position.x -= 10
                         self.jump(walls)
-            return True
         else:
             self.on_wall = False
-            return False
 
     def set_position(self, position):
         self.position = position[0] - self.rect.width // 2, position[1]
