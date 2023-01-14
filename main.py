@@ -45,7 +45,8 @@ def main():
             pg.draw.rect(screen, 'blue', wall.rect, 2)
         # Player moving
         player.update(platforms)
-        player.relationships_with_walls(start_pos)
+        # player.relationships_with_walls(start_pos)
+        player.collisions(walls=start_pos, platforms=platforms)
         player.move()
 
         for event in pg.event.get():
@@ -54,6 +55,15 @@ def main():
             if event.type == pg.KEYDOWN:
                 if event.key == pg.K_SPACE:
                     player.jump(platforms)
+            if event.type == pg.KEYUP:
+                if event.key == pg.K_SPACE:
+                    player.space_up = True
+            else:
+                player.space_up = False
+        if player.on_ground:
+            print('on ground')
+        if player.on_wall:
+            print('on wall')
 
         pg.display.flip()
         clock.tick(FPS)
