@@ -9,29 +9,43 @@ from camera import Camera
 
 
 FPS = 50
-SIZE = WIDTH, HEIGHT = 400, 600
+SIZE = WIDTH, HEIGHT = 600, 800
 CELL_SIZE = CELL_WIDTH, CELL_HEIGHT = 50, 50
+
 pygame.init()
 screen = pygame.display.set_mode(SIZE)
 clock = pygame.time.Clock()
+
 all_sprites = pygame.sprite.Group()
 wall_group = pygame.sprite.Group()
 player_group = pygame.sprite.Group()
+spikes = pygame.sprite.Group()
+
 random_images = ['empty_top', 'empty_bot', 'empty', 'empty']
 
+score = 0
+pygame.font.init()
 
+font = pygame.font.Font('Early GameBoy.ttf', 70)
+text = font.render(str(score), True, (0, 0, 0))
+textRect = text.get_rect()
+textRect.center = (WIDTH // 2, 100)
+
+
+# Функция остановки игры
 def terminate():
     pygame.quit()
     sys.exit()
 
 
-def load_image(name, colorkey=None):
+# Загрузка спрайтов
+def load_image(name, colorkey=None, size=CELL_SIZE):
     fullname = os.path.join('assets', name)
     # если файл не существует, то выходим
     if not os.path.isfile(fullname):
         print(f"Файл с изображением '{fullname}' не найден")
         sys.exit()
-    image = pygame.image.load(fullname)
+    image = pygame.transform.scale(pygame.image.load(fullname), size)
     if colorkey is not None:
         image = image.convert()
         if colorkey == -1:
@@ -42,6 +56,7 @@ def load_image(name, colorkey=None):
     return image
 
 
+# Загрузка уровня
 def load_level(filename):
     filename = "levels/" + filename
     # читаем уровень, убирая символы перевода строки
@@ -59,37 +74,44 @@ def load_level(filename):
 level_presets = (
     load_level('level1.txt'),
     load_level('level2.txt'),
-    load_level('level3.txt')
+    load_level('level3.txt'),
+    # load_level('level4.txt'),
+    # load_level('level5.txt'),
+    # load_level('level6.txt'),
+    # load_level('level7.txt'),
 )
 
-
+# Генерация уровня
 def generate_level(level):
     new_player, x, y = None, None, None
     playerx, playery = None, None
-    c = 0
-    if '@' in level[-1]:
-        for y in range(len(level)):
-            for x in range(len(level[y])):
-                if level[y][x] == '.':
-                    Tile(random.choice(random_images), x, y, tile_images, all_sprites)
-                elif level[y][x] == '-':
-                    Tile('top_wall', x, y, tile_images, wall_group, all_sprites)
-                elif level[y][x] == '|':
-                    Tile('mid_wall', x, y, tile_images, wall_group, all_sprites)
-                elif level[y][x] == '_':
-                    Tile('bot_wall', x, y, tile_images, wall_group, all_sprites)
-                elif level[y][x] == '@':
-                    Tile(random.choice(random_images), x, y, tile_images, all_sprites)
-                    playerx = x
-                    playery = y
+    for y in range(len(level)):
+        for x in range(len(level[y])):
+            if level[y][x] == '.':
+                Tile(random.choice(random_images), x, y, tile_images, all_sprites)
+            elif level[y][x] == '-':
+                Tile('top_wall', x, y, tile_images, wall_group, all_sprites)
+            elif level[y][x] == '|':
+                Tile('mid_wall', x, y, tile_images, wall_group, all_sprites)
+            elif level[y][x] == '_':
+                Tile('bot_wall', x, y, tile_images, wall_group, all_sprites)
+            elif level[y][x] == '<':
+                Tile('left_spike', x, y, tile_images, all_sprites, spikes)
+            elif level[y][x] == '>':
+                Tile('right_spike', x, y, tile_images, all_sprites, spikes)
+            elif level[y][x] == '@':
+                Tile(random.choice(random_images), x, y, tile_images, all_sprites)
+                playerx = x
+                playery = y
 
     if playerx and playery:
-        new_player = Player(playerx, playery, player_image, wall_group, all_sprites,  player_group)
+        new_player = Player(playerx, playery, player_image, wall_group, spikes, all_sprites,  player_group)
     # вернем игрока, а также размер поля в клетках
     return new_player, x, y
 
-
 tile_images = {
+    'left_spike': pygame.transform.scale(load_image('left_spike.png'), CELL_SIZE),
+    'right_spike': pygame.transform.scale(load_image('right_spike.png'), CELL_SIZE),
     'mid_wall': pygame.transform.scale(load_image('wall2_mid.png'), CELL_SIZE),
     'top_wall': pygame.transform.scale(load_image('wall2_top.png'), CELL_SIZE),
     'bot_wall': pygame.transform.scale(load_image('wall2_bot.png'), CELL_SIZE),
@@ -97,8 +119,8 @@ tile_images = {
     'empty_bot': pygame.transform.scale(load_image('bg_bot_cloud.png'), CELL_SIZE),
     'empty': pygame.transform.scale(load_image('bg_empty.png'), CELL_SIZE)
 }
-player_image = pygame.transform.scale(load_image('player.png'), (40, 50))
-
+player_image = load_image('player.png', size=(39, 50))
+# Загрузка всех уровней в игру
 levels = list()
 for _ in range(10):
     levels.extend(level_presets)
@@ -110,32 +132,49 @@ level.extend(load_level('level0.txt'))
 player, level_x, level_y = generate_level(level)
 camera = Camera()
 
-count = 0
-
 
 def main():
     global player
-    global count
+    global score
+    game_started = False
     running = True
     while running:
+        text = font.render(str(int(score / 12)), True, (0, 0, 0))
+
+        spike = pygame.sprite.spritecollideany(player, spikes)
+        # Проверка для останвоки игры
+        if spike or (player.rect.midbottom[1] > HEIGHT and game_started):
+            running = False
+
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
+            if event.type == pygame.QUIT or spike:
                 running = False
                 break
             if event.type == pygame.KEYDOWN:
+                # Прыжок игрока
                 if event.key == pygame.K_LEFT:
                     player.start_moving("left")
+                    game_started = True
                 elif event.key == pygame.K_RIGHT:
+                    game_started = True
                     player.start_moving("right")
+        # Скольжение по стене
+        collide = pygame.sprite.spritecollideany(player, wall_group)
+        if collide:
+            print('touching')
+            player.rect.y += 1
 
         screen.fill("white")
-        all_sprites.update()
         all_sprites.draw(screen)
+        screen.blit(text, textRect)
+
+        all_sprites.update()
         camera.update(player)
+        # Засчитыывание очка
         for sprite in all_sprites:
             camera.apply(sprite)
             if type(sprite) is not Player and not sprite.counted and sprite.rect.y > HEIGHT:
-                count += 1
+                score += 1
                 sprite.counted = True
         pygame.display.flip()
         clock.tick(FPS)
@@ -143,7 +182,6 @@ def main():
 
 if __name__ == '__main__':
     main()
-    print(count)
-    print(count / 8)
+    score /= 12
     # end_screen()
     terminate()

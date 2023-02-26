@@ -20,7 +20,7 @@ class Camera:
         from main import HEIGHT, WIDTH
         current_point = target.rect.y
         if target:
-            self.dx = -(target.rect.x + target.rect.w // 2 - WIDTH // 2)
+            # self.dx = -(target.rect.x + target.rect.w // 2 - WIDTH // 2)
             if target.dir_y > 0:
                 self.dy = 0
             else:
