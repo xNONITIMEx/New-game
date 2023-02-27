@@ -222,3 +222,6 @@ def menu():
         pygame.display.update()
     pygame.quit()
 
+
+if __name__ == '__main__':
+    menu()
