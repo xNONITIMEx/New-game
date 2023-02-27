@@ -1,6 +1,7 @@
 import button
 import pygame
 import os
+import sys
 from main import terminate
 
 pygame.init()
@@ -18,6 +19,7 @@ menu_state = "main"
 
 FONT_ARIAL_BLACK_30 = pygame.font.SysFont("arialblack", 30)
 FONT_INTER_LIGHT_30 = pygame.font.Font("Inter-Light.ttf", 30)
+FONT_INTER_BLACK_30 = pygame.font.Font("Inter-Light.ttf", 30)
 FONT_INTER_REGULAR_40 = pygame.font.Font("resources/fonts/Inter/static/Inter-Regular.ttf", 40)
 FONT_INTER_REGULAR_50 = pygame.font.Font("resources/fonts/Inter/static/Inter-Regular.ttf", 50)
 
@@ -157,6 +159,15 @@ def menu():
                     os.quit()
                     pygame.quit()
             if menu_state == "options":
+                # draw the different options buttons
+                if video_button.draw(screen):
+                    print("Video Settings")
+                if audio_button.draw(screen):
+                    print("Audio Settings")
+                if keys_button.draw(screen):
+                    print("Change Key Bindings")
+                if back_button.draw(screen):
+                    menu_state = "main"
                 if options_button.get_type() == "Настройки":
                     menu_options.draw(screen)
                     draw_text("Настройки", FONT_INTER_REGULAR_50,
@@ -166,7 +177,7 @@ def menu():
                         level_volume = 0
                     btn_menu_settings_folder.draw(screen)
                     if btn_menu_settings_folder.on_click():
-                        path = os.path.abspath('PyGameProject/menu/')
+                        path = os.path.abspath('./')
                         os.system(f'start {os.path.realpath(path)}')
                         # path = "C:/Users"
                         # path = os.path.realpath(path)
@@ -178,6 +189,8 @@ def menu():
                     btn_menu_settings_level_2.draw(screen)
                     btn_menu_settings_level_3.draw(screen)
                     btn_menu_settings_level_4.draw(screen)
+                elif options_button.get_type() == "Выйти":
+                    sys.exit(0)
 
 
                 # draw the different options buttons
@@ -209,6 +222,3 @@ def menu():
         pygame.display.update()
     pygame.quit()
 
-
-if __name__ == '__main__':
-    menu()

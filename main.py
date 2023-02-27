@@ -74,8 +74,8 @@ level_presets = (
     load_level('level1.txt'),
     load_level('level2.txt'),
     load_level('level3.txt'),
-    # load_level('level4.txt'),
-    # load_level('level5.txt'),
+    load_level('level4.txt'),
+    load_level('level5.txt'),
     # load_level('level6.txt'),
     # load_level('level7.txt'),
 )
